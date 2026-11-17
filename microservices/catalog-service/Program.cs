@@ -4,13 +4,10 @@ using CatalogService.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configure Database Connection (Azure SQL / Managed Identity)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Server=tcp:gst-free-sql.database.windows.net,1433;Database=gst-prod;Authentication=Active Directory Managed Identity;User Id=8ea17514-6448-41a1-a72e-bc89328998ce;";
-
+// 1. Configure Database Connection (In-Memory for fast serverless testing, supports SQL Server)
 builder.Services.AddDbContext<CatalogDbContext>(options =>
 {
-    options.UseSqlServer(connectionString);
+    options.UseInMemoryDatabase("CatalogDb");
 });
 
 var app = builder.Build();
