@@ -72,12 +72,25 @@ jobs:
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
 
+          # Ensure Azure CLI has the containerapp extension
+          az extension add --name containerapp --upgrade --yes
+
+          # Explicitly set the subscription context
+          az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+          # List resources to verify visibility in logs
+          az containerapp list --resource-group GST -o table
+
+          # Update Catalog API
           az containerapp update \
             --name catalog-api \
             --resource-group GST \
+            --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
             --image ghcr.io/$OWNER/catalog-api:${{ github.sha }}
 
+          # Update Order API
           az containerapp update \
             --name order-api \
             --resource-group GST \
+            --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
             --image ghcr.io/$OWNER/order-api:${{ github.sha }}
