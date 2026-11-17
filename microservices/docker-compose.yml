@@ -1,0 +1,23 @@
+services:
+  catalog-api:
+    build:
+      context: ./catalog-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=tcp:gst-free-sql.database.windows.net,1433;Database=gst-prod;Authentication=Active Directory Managed Identity;User Id=8ea17514-6448-41a1-a72e-bc89328998ce;
+
+  order-api:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CatalogServiceUrl=http://catalog-api:8080
+      - ConnectionStrings__DefaultConnection=Server=tcp:gst-free-sql.database.windows.net,1433;Database=gst-prod;Authentication=Active Directory Managed Identity;User Id=8ea17514-6448-41a1-a72e-bc89328998ce;
+    depends_on:
+      - catalog-api

@@ -1,0 +1,108 @@
+<div class="app-layout">
+  <!-- Top Navigation & Header -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-logo">🅰️</div>
+      <div>
+        <h1 class="brand-title">Angular Modern Reactivity Lab</h1>
+        <p class="brand-sub">Signals • Zone.js • Zoneless Change Detection</p>
+      </div>
+    </div>
+
+    <div class="header-badges">
+      <div class="status-chip chip-zoneless">
+        <span class="chip-dot"></span>
+        <span>Mode: <strong>{{ isZoneLoaded() ? 'Zone.js Active' : 'Zoneless Active' }}</strong></span>
+      </div>
+      <div class="status-chip chip-version">
+        <span>Angular <strong>v21+</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Interactive Tab Bar -->
+  <nav class="tab-bar">
+    <button
+      class="tab-btn"
+      [class.active]="currentTab() === 'all'"
+      (click)="setTab('all')"
+    >
+      📚 View All Modules
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="currentTab() === 'zone'"
+      (click)="setTab('zone')"
+    >
+      🌐 1. Zone.js vs Zoneless
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="currentTab() === 'signals'"
+      (click)="setTab('signals')"
+    >
+      ⚡ 2. Signals Core Primitives
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="currentTab() === 'lab'"
+      (click)="setTab('lab')"
+    >
+      🔬 3. Async Trap & Zoneless Lab
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="currentTab() === 'components'"
+      (click)="setTab('components')"
+    >
+      🧩 4. input(), model(), output()
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="currentTab() === 'resource'"
+      (click)="setTab('resource')"
+    >
+      📡 5. resource() API
+    </button>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+    @if (currentTab() === 'all' || currentTab() === 'zone') {
+      <section id="sec-zone">
+        <app-zone-explainer />
+      </section>
+    }
+
+    @if (currentTab() === 'all' || currentTab() === 'signals') {
+      <section id="sec-signals">
+        <app-signals-core />
+      </section>
+    }
+
+    @if (currentTab() === 'all' || currentTab() === 'lab') {
+      <section id="sec-lab">
+        <app-zoneless-lab />
+      </section>
+    }
+
+    @if (currentTab() === 'all' || currentTab() === 'components') {
+      <section id="sec-components">
+        <app-parent-child-demo />
+      </section>
+    }
+
+    @if (currentTab() === 'all' || currentTab() === 'resource') {
+      <section id="sec-resource">
+        <app-resource-demo />
+      </section>
+    }
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>
+      Built for hands-on practical understanding of Angular Signals and Zoneless Architecture.
+    </p>
+  </footer>
+</div>

@@ -1,0 +1,18 @@
+services:
+  # 1. Nginx Load Balancer (Public on port 8080)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+
+  # 2. Scalable API (Private - no public ports!)
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    environment:
+      PORT: 3000
