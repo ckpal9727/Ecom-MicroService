@@ -79,18 +79,18 @@ jobs:
           az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
           # List resources to verify visibility in logs
-          az containerapp list --resource-group GST -o table
+          az containerapp list --resource-group Test -o table
 
           # Update Catalog API
           az containerapp update \
             --name catalog-api \
-            --resource-group GST \
+            --resource-group Test \
             --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
             --image ghcr.io/$OWNER/catalog-api:${{ github.sha }}
 
           # Update Order API
           az containerapp update \
             --name order-api \
-            --resource-group GST \
+            --resource-group Test \
             --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} \
             --image ghcr.io/$OWNER/order-api:${{ github.sha }}
