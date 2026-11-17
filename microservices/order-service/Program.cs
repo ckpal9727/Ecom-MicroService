@@ -1,17 +1,14 @@
-using Microsoft.EntityFrameworkCore;
-using OrderService.Data;
+using System.Collections.Concurrent;
 using OrderService.Models;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Configure Database Connection (In-Memory for fast serverless testing, supports SQL Server)
-builder.Services.AddDbContext<OrderDbContext>(options =>
-{
-    options.UseInMemoryDatabase("OrderDb");
-});
+// Register thread-safe in-memory order store
+var orders = new ConcurrentDictionary<int, Order>();
+builder.Services.AddSingleton(orders);
 
-// 2. Register HttpClient for internal microservice communication
+// Register HttpClient for internal microservice communication
 var catalogServiceUrl = builder.Configuration["CatalogServiceUrl"] ?? "http://catalog-api";
 builder.Services.AddHttpClient("CatalogClient", client =>
 {
@@ -21,30 +18,17 @@ builder.Services.AddHttpClient("CatalogClient", client =>
 
 var app = builder.Build();
 
-// 3. Auto-Migration on startup
-try
-{
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
-    db.Database.EnsureCreated();
-    Console.WriteLine("✅ Order database schema verified and updated automatically.");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"⚠️ Order Database Auto-Migration warning: {ex.Message}");
-}
-
-// 4. Health Check
+// 1. Health Check
 app.MapGet("/health", () => Results.Ok(new { status = "Healthy", service = "OrderService", timestamp = DateTime.UtcNow }));
 
-// 5. Get all orders
-app.MapGet("/orders", async (OrderDbContext db) =>
+// 2. Get all orders
+app.MapGet("/orders", (ConcurrentDictionary<int, Order> store) =>
 {
-    return await db.Orders.OrderByDescending(o => o.OrderDate).ToListAsync();
+    return Results.Ok(store.Values.OrderByDescending(o => o.OrderDate));
 });
 
-// 6. Create Order (Demonstrates inter-service microservice call)
-app.MapPost("/orders", async (CreateOrderRequest request, OrderDbContext db, IHttpClientFactory httpClientFactory) =>
+// 3. Create Order (Demonstrates inter-service microservice call)
+app.MapPost("/orders", async (CreateOrderRequest request, ConcurrentDictionary<int, Order> store, IHttpClientFactory httpClientFactory) =>
 {
     var httpClient = httpClientFactory.CreateClient("CatalogClient");
 
@@ -81,9 +65,11 @@ app.MapPost("/orders", async (CreateOrderRequest request, OrderDbContext db, IHt
         return Results.Problem("Failed to reserve product stock.");
     }
 
-    // C. Record the order in database
+    // C. Record the order in in-memory store
+    var nextId = store.Keys.DefaultIfEmpty(0).Max() + 1;
     var order = new Order
     {
+        Id = nextId,
         CustomerEmail = request.CustomerEmail,
         ProductId = request.ProductId,
         Quantity = request.Quantity,
@@ -92,9 +78,7 @@ app.MapPost("/orders", async (CreateOrderRequest request, OrderDbContext db, IHt
         OrderDate = DateTime.UtcNow
     };
 
-    db.Orders.Add(order);
-    await db.SaveChangesAsync();
-
+    store[nextId] = order;
     return Results.Created($"/orders/{order.Id}", order);
 });
 
